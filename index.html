@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spinning Roulette</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0b1020;
+      color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1100px;
+      width: 100%;
+      display: flex;
+      gap: 20px;
+    }
+
+    .panel {
+      background: #141a33;
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .left-panel {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .header-row-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    h2 {
+      font-size: 16px;
+      margin: 4px 0 8px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      border-radius: 10px;
+      border: 1px solid #2b3154;
+      padding: 10px;
+      background: #0f1424;
+      color: #f5f5f5;
+      font-size: 14px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #4a8fff;
+      box-shadow: 0 0 0 1px #4a8fff55;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #2f80ed;
+      color: #fdfdfd;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    button.secondary {
+      background: #2b3154;
+    }
+
+    button.small {
+      padding: 4px 10px;
+      font-size: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      background: #3c8dff;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #aab3ff;
+      min-height: 18px;
+    }
+
+    .wheel-wrapper {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wheel-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .wheel-container {
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #wheelCanvas {
+      border-radius: 50%;
+      background: #111628;
+      display: block;
+      margin: auto;
+      transform-origin: 50% 50%;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 22px solid #ffcc00; /* triangle points downward to wheel */
+      filter: drop-shadow(0 0 4px rgba(0,0,0,0.7));
+      z-index: 2;
+    }
+
+    .spin-side-btn {
+      font-size: 18px;
+      padding: 18px 22px;
+      border-radius: 999px;
+      background: #27ae60;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .result-label {
+      font-size: 14px;
+      color: #d0d4ff;
+    }
+
+    .result-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffdf6b;
+    }
+
+    .lists-panel {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .list-box {
+      flex: 1;
+      background: #0f1424;
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid #262c4a;
+      min-height: 150px;
+    }
+
+    .list-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .list-box h3 {
+      font-size: 13px;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8c93c9;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      font-size: 13px;
+    }
+
+    li {
+      padding: 4px 6px;
+      border-radius: 6px;
+      margin-bottom: 2px;
+      background: #181e36;
+      border: 1px solid #222845;
+      word-break: break-word;
+    }
+
+    .empty-msg {
+      font-size: 12px;
+      color: #6f769f;
+      font-style: italic;
+    }
+
+    /* Popup */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.4);
+      transition: opacity 0.15s ease-out;
+    }
+
+    .popup-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .popup-content-wrapper {
+      padding: 24px 28px;
+      border-radius: 24px;
+      background: #151a30;
+      border: 2px solid #ffffff55;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.8);
+      min-width: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      animation: popupFlash 0.6s ease-out;
+    }
+
+    .popup-content {
+      padding: 20px 40px;
+      border-radius: 999px;
+      font-size: 32px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(0,0,0,0.8);
+      background: linear-gradient(135deg, #ff6b6b, #fddb3a, #1dd3b0, #6c5ce7);
+      background-size: 300% 300%;
+      border: 3px solid #ffffffaa;
+    }
+
+    .popup-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .popup-buttons button {
+      min-width: 80px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .popup-buttons .ok-btn {
+      background: #2ecc71;
+    }
+
+    .popup-buttons .absent-btn {
+      background: #e74c3c;
+    }
+
+    .popup-buttons .unavail-btn {
+      background: #f1c40f;
+      color: #222;
+    }
+
+    @keyframes popupFlash {
+      0% {
+        transform: scale(0.4);
+      }
+      40% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 10px;
+      }
+      .app {
+        flex-direction: column;
+      }
+      .wheel-container {
+        width: 300px;
+        height: 300px;
+      }
+      .wheel-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="left-panel panel">
+      <div class="header-row-main">
+        <h1>Spinning Roulette</h1>
+        <button id="toggleListsBtn" class="secondary small">Hide Lists</button>
+      </div>
+
+      <div class="status" id="statusText"></div>
+
+      <div class="wheel-wrapper">
+        <div class="wheel-row">
+          <div class="wheel-container">
+            <canvas id="wheelCanvas" width="360" height="360"></canvas>
+            <div class="pointer"></div>
+          </div>
+          <button id="spinBtn" class="spin-side-btn" disabled>Spin</button>
+        </div>
+        <div class="result-label">Last result</div>
+        <div class="result-value" id="lastResult">—</div>
+      </div>
+    </div>
+
+    <div class="right-panel panel" id="rightPanel">
+      <div class="lists-panel">
+        <div class="list-box">
+          <div class="list-box-header">
+            <h3>Entries</h3>
+            <button id="toggleEntriesBtn" class="secondary small">Hide</button>
+          </div>
+          <div id="entriesPanel">
+            <textarea id="entriesInput"></textarea>
+            <div class="btn-row">
+              <button id="setEntriesBtn">Set</button>
+              <button id="resetBtn" class="secondary">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-box">
+          <div class="list-box-header">
+            <h3>Called</h3>
+            <button id="copyCalledBtn" class="secondary small">Copy to Entries</button>
+          </div>
+          <div id="calledListContainer">
+            <div class="empty-msg">Nothing yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup overlay -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-content-wrapper">
+      <div class="popup-content" id="popupContent"></div>
+      <div class="popup-buttons">
+        <button id="popupOkBtn" class="ok-btn">OK</button>
+        <button id="popupAbsentBtn" class="absent-btn">Absent</button>
+        <button id="popupUnavailableBtn" class="unavail-btn">Unavailable</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const entriesInput = document.getElementById('entriesInput');
+    const setEntriesBtn = document.getElementById('setEntriesBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const spinBtn = document.getElementById('spinBtn');
+
+    const toggleEntriesBtn = document.getElementById('toggleEntriesBtn');
+    const entriesPanel = document.getElementById('entriesPanel');
+
+    const toggleListsBtn = document.getElementById('toggleListsBtn');
+    const rightPanel = document.getElementById('rightPanel');
+    const copyCalledBtn = document.getElementById('copyCalledBtn');
+
+    const statusText = document.getElementById('statusText');
+    const lastResultEl = document.getElementById('lastResult');
+
+    const calledListContainer = document.getElementById('calledListContainer');
+
+    const popupOverlay = document.getElementById('popupOverlay');
+    const popupContent = document.getElementById('popupContent');
+    const popupOkBtn = document.getElementById('popupOkBtn');
+    const popupAbsentBtn = document.getElementById('popupAbsentBtn');
+    const popupUnavailableBtn = document.getElementById('popupUnavailableBtn');
+
+    let segments = [];
+    let called = [];
+    let isSpinning = false;
+    let currentRotation = 0; // radians
+    let listsVisible = true;
+    let entriesVisible = true;
+
+    // Pending winner
+    let pendingWinnerIndex = null;
+    let pendingWinnerName = null;
+
+    // Local storage key
+    const STORAGE_KEY = 'rouletteState_v1';
+
+    // Web Audio
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      return audioCtx;
+    }
+
+    function playSpinSound() {
+      const ctxAudio = getAudioCtx();
+      if (!ctxAudio) return;
+      const duration = 1.2;
+
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+
+      osc.type = 'sawtooth';
+      const now = ctxAudio.currentTime;
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.linearRampToValueAtTime(620, now + duration);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0.0, now + duration);
+
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    function playWinSound() {
+      const ctxAudio = getAudioCtx();
+      if (!ctxAudio) return;
+
+      const now = ctxAudio.currentTime;
+
+      function tone(freq, startOffset, dur, vol) {
+        const osc = ctxAudio.createOscillator();
+        const gain = ctxAudio.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + startOffset);
+        gain.gain.setValueAtTime(vol, now + startOffset);
+        gain.gain.linearRampToValueAtTime(0, now + startOffset + dur);
+        osc.connect(gain);
+        gain.connect(ctxAudio.destination);
+        osc.start(now + startOffset);
+        osc.stop(now + startOffset + dur);
+      }
+
+      tone(440, 0.0, 0.25, 0.18);
+      tone(554.37, 0.12, 0.25, 0.18);
+      tone(659.25, 0.24, 0.35, 0.2);
+    }
+
+    function parseEntries() {
+      const raw = entriesInput.value || '';
+      return raw
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    }
+
+    function syncEntriesFromSegments() {
+      entriesInput.value = segments.join('\n');
+    }
+
+    function saveState() {
+      try {
+        const state = {
+          segments,
+          called,
+          currentRotation,
+          lastResult: lastResultEl ? lastResultEl.textContent : '—'
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn('Could not save state', e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          drawWheel();
+          renderLists();
+          return;
+        }
+        const state = JSON.parse(raw);
+
+        segments = Array.isArray(state.segments) ? state.segments : [];
+        called = Array.isArray(state.called) ? state.called : [];
+        currentRotation = typeof state.currentRotation === 'number' ? state.currentRotation : 0;
+
+        // Restore entries box from segments
+        entriesInput.value = segments.join('\n');
+
+        // Restore wheel rotation
+        const deg = (currentRotation * 180) / Math.PI;
+        canvas.style.transform = `rotate(${deg}deg)`;
+
+        // Restore last result text
+        if (state.lastResult) {
+          lastResultEl.textContent = state.lastResult;
+        } else {
+          lastResultEl.textContent = '—';
+        }
+
+        spinBtn.disabled = segments.length === 0;
+
+        drawWheel();
+        renderLists();
+
+        if (segments.length > 0 || called.length > 0) {
+          statusText.textContent = 'State restored.';
+        } else {
+          statusText.textContent = '';
+        }
+      } catch (e) {
+        console.warn('Could not load state', e);
+        drawWheel();
+        renderLists();
+      }
+    }
+
+    function setEntries() {
+      const values = parseEntries();
+      if (values.length === 0) {
+        statusText.textContent = 'No entries.';
+        segments = [];
+        called = [];
+        pendingWinnerIndex = null;
+        pendingWinnerName = null;
+        lastResultEl.textContent = '—';
+        spinBtn.disabled = true;
+        canvas.style.transform = 'rotate(0deg)';
+        drawWheel();
+        renderLists();
+        saveState();
+        return;
+      }
+      segments = values.slice();
+      called = [];
+      currentRotation = 0;
+      pendingWinnerIndex = null;
+      pendingWinnerName = null;
+      canvas.style.transform = 'rotate(0deg)';
+      lastResultEl.textContent = '—';
+      statusText.textContent = `Loaded ${segments.length}.`;
+      spinBtn.disabled = false;
+      syncEntriesFromSegments();
+      drawWheel();
+      renderLists();
+      saveState();
+    }
+
+    function drawWheel() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = Math.min(w, h) / 2 - 5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      if (segments.length === 0) {
+        ctx.fillStyle = '#1b2139';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#555d88';
+        ctx.font = '14px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('No entries', cx, cy);
+        return;
+      }
+
+      const anglePerSlice = (Math.PI * 2) / segments.length;
+
+      for (let i = 0; i < segments.length; i++) {
+        const startAngle = i * anglePerSlice;
+        const endAngle = startAngle + anglePerSlice;
+
+        const hue = (i * (360 / segments.length)) % 360;
+        ctx.fillStyle = `hsl(${hue}, 65%, 50%)`;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#0b1020';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        const midAngle = startAngle + anglePerSlice / 2;
+        const textRadius = radius * 0.65;
+        const textX = cx + Math.cos(midAngle) * textRadius;
+        const textY = cy + Math.sin(midAngle) * textRadius;
+
+        ctx.save();
+        ctx.translate(textX, textY);
+        ctx.rotate(midAngle);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '13px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        let label = segments[i];
+        if (label.length > 16) {
+          label = label.slice(0, 13) + '...';
+        }
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.12, 0, Math.PI * 2);
+      ctx.fillStyle = '#0b1020';
+      ctx.fill();
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    function renderLists() {
+      if (called.length === 0) {
+        calledListContainer.innerHTML = '<div class="empty-msg">Nothing yet.</div>';
+      } else {
+        const ul2 = document.createElement('ul');
+        called.forEach(v => {
+          const li = document.createElement('li');
+          li.textContent = v;
+          ul2.appendChild(li);
+        });
+        calledListContainer.innerHTML = '';
+        calledListContainer.appendChild(ul2);
+      }
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function spinWheel() {
+      if (isSpinning || segments.length === 0) return;
+
+      isSpinning = true;
+      spinBtn.disabled = true;
+      setEntriesBtn.disabled = true;
+      resetBtn.disabled = true;
+      statusText.textContent = 'Spinning…';
+
+      playSpinSound();
+
+      const duration = 3500;
+      const extraRotations = 5 * Math.PI * 2;
+      const randomOffset = Math.random() * Math.PI * 2;
+      const startRotation = currentRotation;
+      const targetRotation = startRotation + extraRotations + randomOffset;
+
+      const startTime = performance.now();
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        let t = elapsed / duration;
+        if (t > 1) t = 1;
+        const eased = easeOutCubic(t);
+        const angle = startRotation + (targetRotation - startRotation) * eased;
+
+        currentRotation = angle;
+        const deg = (angle * 180) / Math.PI;
+        canvas.style.transform = `rotate(${deg}deg)`;
+
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          currentRotation = currentRotation % (Math.PI * 2);
+          isSpinning = false;
+          determineWinner();
+          saveState(); // save rotation too
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function showPopup(name) {
+      popupContent.textContent = name;
+      popupOverlay.classList.add('active');
+    }
+
+    function hidePopup() {
+      popupOverlay.classList.remove('active');
+    }
+
+    function determineWinner() {
+      if (segments.length === 0) {
+        statusText.textContent = 'No entries.';
+        return;
+      }
+
+      const pointerAngle = -Math.PI / 2;
+      const fullCircle = Math.PI * 2;
+      const sliceAngle = fullCircle / segments.length;
+
+      let relativeAngle = pointerAngle - currentRotation;
+      relativeAngle = ((relativeAngle % fullCircle) + fullCircle) % fullCircle;
+
+      let index = Math.floor(relativeAngle / sliceAngle);
+      if (index < 0) index = 0;
+      if (index >= segments.length) index = segments.length - 1;
+
+      pendingWinnerIndex = index;
+      pendingWinnerName = segments[index];
+
+      statusText.textContent = `Selected: ${pendingWinnerName}`;
+      showPopup(pendingWinnerName);
+      playWinSound();
+    }
+
+    function clearPending() {
+      pendingWinnerIndex = null;
+      pendingWinnerName = null;
+    }
+
+    function reenableButtonsAfterDecision() {
+      setEntriesBtn.disabled = false;
+      resetBtn.disabled = false;
+      spinBtn.disabled = segments.length === 0;
+    }
+
+    function handleOk() {
+      if (pendingWinnerName == null || pendingWinnerIndex == null) return;
+      const name = pendingWinnerName;
+
+      if (pendingWinnerIndex >= 0 && pendingWinnerIndex < segments.length) {
+        segments.splice(pendingWinnerIndex, 1);
+      }
+      called.push(name);
+
+      syncEntriesFromSegments();
+      lastResultEl.textContent = name;
+      statusText.textContent = `Called: ${name}`;
+      drawWheel();
+      renderLists();
+      clearPending();
+      hidePopup();
+      reenableButtonsAfterDecision();
+      saveState();
+    }
+
+    function handleAbsent() {
+      if (pendingWinnerName == null || pendingWinnerIndex == null) return;
+      const name = pendingWinnerName;
+
+      if (pendingWinnerIndex >= 0 && pendingWinnerIndex < segments.length) {
+        segments.splice(pendingWinnerIndex, 1);
+      }
+
+      syncEntriesFromSegments();
+      lastResultEl.textContent = `${name} (Absent)`;
+      statusText.textContent = `${name} removed (Absent).`;
+      drawWheel();
+      renderLists();
+      clearPending();
+      hidePopup();
+      reenableButtonsAfterDecision();
+      saveState();
+    }
+
+    function handleUnavailable() {
+      if (pendingWinnerName == null || pendingWinnerIndex == null) return;
+      const name = pendingWinnerName;
+
+      lastResultEl.textContent = `${name} (Unavailable)`;
+      statusText.textContent = `${name} kept on wheel.`;
+      drawWheel();
+      renderLists();
+      clearPending();
+      hidePopup();
+      reenableButtonsAfterDecision();
+      saveState();
+    }
+
+    function toggleLists() {
+      listsVisible = !listsVisible;
+      if (listsVisible) {
+        rightPanel.style.display = '';
+        toggleListsBtn.textContent = 'Hide Lists';
+      } else {
+        rightPanel.style.display = 'none';
+        toggleListsBtn.textContent = 'Show Lists';
+      }
+    }
+
+    function toggleEntries() {
+      entriesVisible = !entriesVisible;
+      if (entriesVisible) {
+        entriesPanel.style.display = '';
+        toggleEntriesBtn.textContent = 'Hide';
+      } else {
+        entriesPanel.style.display = 'none';
+        toggleEntriesBtn.textContent = 'Show';
+      }
+    }
+
+    function copyCalledToEntries() {
+      if (called.length === 0) {
+        statusText.textContent = 'Called list empty.';
+        return;
+      }
+      segments = called.slice();
+      called = [];
+      currentRotation = 0;
+      canvas.style.transform = 'rotate(0deg)';
+      clearPending();
+      syncEntriesFromSegments();
+      lastResultEl.textContent = '—';
+      statusText.textContent = 'Entries from called.';
+      spinBtn.disabled = segments.length === 0;
+      drawWheel();
+      renderLists();
+      saveState();
+    }
+
+    function resetAll() {
+      segments = [];
+      called = [];
+      currentRotation = 0;
+      isSpinning = false;
+      clearPending();
+      canvas.style.transform = 'rotate(0deg)';
+      entriesInput.value = '';
+      lastResultEl.textContent = '—';
+      statusText.textContent = 'Reset.';
+      spinBtn.disabled = true;
+      setEntriesBtn.disabled = false;
+      resetBtn.disabled = false;
+      drawWheel();
+      renderLists();
+      saveState();
+    }
+
+    // Event listeners
+    setEntriesBtn.addEventListener('click', setEntries);
+    spinBtn.addEventListener('click', spinWheel);
+    resetBtn.addEventListener('click', resetAll);
+
+    toggleListsBtn.addEventListener('click', toggleLists);
+    toggleEntriesBtn.addEventListener('click', toggleEntries);
+    copyCalledBtn.addEventListener('click', copyCalledToEntries);
+
+    popupOkBtn.addEventListener('click', handleOk);
+    popupAbsentBtn.addEventListener('click', handleAbsent);
+    popupUnavailableBtn.addEventListener('click', handleUnavailable);
+
+    // Initial load (try to restore state)
+    loadState();
+  </script>
+</body>
+</html>
